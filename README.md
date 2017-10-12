@@ -1,5 +1,4 @@
 # GraphQL::QueryResolver
-[![Build Status](https://travis-ci.org/nettofarah/graphql-query-resolver.svg?branch=master)](https://travis-ci.org/nettofarah/graphql-query-resolver)
 
 GraphQL::QueryResolver is an add-on to [graphql-ruby](https://github.com/rmosolgo/graphql-ruby)
 that allows your field resolvers to minimize N+1 SELECTS issued by ActiveRecord.
@@ -22,38 +21,36 @@ gem 'graphql-query-resolver'
 
 And then execute:
 
-  $ bundle
+  `$ bundle`
 
 Or install it yourself as:
 
-  $ gem install graphql-query-resolver
+  `$ gem install graphql-query-resolver`
 
 ## Usage
 ```ruby
 require 'graphql/query_resolver'
 
 # In your field resolver
-# Assuming `Project < ActiveRecord::Base` and a `ProjectType` GraphQL type:
-#
+# Assuming `Project < ActiveRecord::Base`:
 field :projects do
   type types[ProjectType]
 
   resolve -> (obj, args, ctx) {
     # Wrap your field resolve operation with `GraphQL::QueryResolver`
-    GraphQL::QueryResolver.run(Project, ctx, ProjectType) do
+    GraphQL::QueryResolver.run(Project, ctx) do
       Project.all
     end
   }
 end
 
 # QueryResolver works the same way for single objects
-
 field :comment do
   type CommentType
   argument :id, !types.ID
 
   resolve -> (obj, args, ctx) {
-    GraphQL::QueryResolver.run(Comment, ctx, CommentType) do
+    GraphQL::QueryResolver.run(Comment, ctx) do
       Comment.find(args['id'])
     end
   }

@@ -1,7 +1,8 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe GraphQL::QueryResolver do
-
   before(:each) do
     TestData.create_netto
   end
@@ -10,14 +11,14 @@ describe GraphQL::QueryResolver do
     data = nil
 
     queries = track_queries do
-      data = GQL.query(%{
+      data = GQL.query(%(
         query {
           recipes {
             title
             ingredients { name }
           }
         }
-      })
+      ))
     end
 
     expect(queries.size).to eq(2)
@@ -29,7 +30,7 @@ describe GraphQL::QueryResolver do
     data = nil
 
     queries = track_queries do
-      data = GQL.query(%{
+      data = GQL.query(%(
         query {
           recipes {
             title
@@ -39,7 +40,7 @@ describe GraphQL::QueryResolver do
             }
           }
         }
-      })
+      ))
     end
 
     expect(queries.size).to eq(3)
@@ -52,7 +53,7 @@ describe GraphQL::QueryResolver do
     data = nil
 
     queries = track_queries do
-      data = GQL.query(%{
+      data = GQL.query(%(
         query {
           restaurant(id: 1) {
             name
@@ -70,27 +71,28 @@ describe GraphQL::QueryResolver do
             }
           }
         }
-      })
+      ))
     end
 
-
     expect(queries[0]).to include('SELECT "restaurants".* FROM "restaurants" WHERE "restaurants"."id" = ?')
-    expect(queries[1]).to include('SELECT "chefs".* FROM "chefs" WHERE "chefs"."id"') # AR 4 will use id IN (1), AR 5 will use id = 1
-    expect(queries[2]).to include('SELECT "recipes".* FROM "recipes" WHERE "recipes"."chef_id"') # AR 4 will use id IN (1), AR 5 will use id = 1
+    # AR 4 will use id IN (1), AR 5 will use id = 1
+    expect(queries[1]).to include('SELECT "chefs".* FROM "chefs" WHERE "chefs"."id"')
+    # AR 4 will use id IN (1), AR 5 will use id = 1
+    expect(queries[2]).to include('SELECT "recipes".* FROM "recipes" WHERE "recipes"."chef_id"')
     expect(queries[3]).to include('SELECT "ingredients".* FROM "ingredients" WHERE "ingredients"."recipe_id" IN (1, 2, 3, 4)')
     expect(queries[4]).to include('SELECT "vendors".* FROM "vendors" WHERE "vendors"."id" IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)')
   end
 
   it 'works with alias reflections' do
     # Owner is an instance of Chef
-    query = %{
+    query = %(
       query {
         restaurant(id: 1) {
           name
           owner { name }
         }
       }
-    }
+    )
 
     queries = track_queries do
       GQL.query(query)
@@ -100,7 +102,7 @@ describe GraphQL::QueryResolver do
   end
 
   it 'works with pagination' do
-    query = %{
+    query = %(
       query {
         vendors(first: 5) {
           edges {
@@ -119,7 +121,7 @@ describe GraphQL::QueryResolver do
           }
         }
       }
-    }
+    )
     queries = track_queries do
       GQL.query(query)
     end
@@ -128,7 +130,7 @@ describe GraphQL::QueryResolver do
   end
 
   it 'works with paginations and "nodes" selection' do
-    query = %{
+    query = %(
       query {
         vendors(first: 5) {
           nodes {
@@ -145,7 +147,7 @@ describe GraphQL::QueryResolver do
           }
         }
       }
-    }
+    )
     queries = track_queries do
       GQL.query(query)
     end

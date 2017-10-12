@@ -1,10 +1,12 @@
+# frozen_string_literal: true
+
 require 'graphql'
 require 'graphql/query_resolver'
 
 GraphQL::Relay::ConnectionType.default_nodes_field = true
 
 RestaurantType = GraphQL::ObjectType.define do
-  name "restaurant"
+  name 'restaurant'
 
   field :id, types.ID
   field :name, types.String
@@ -12,7 +14,7 @@ RestaurantType = GraphQL::ObjectType.define do
   field :owner do
     type ChefType
 
-    resolve -> (obj, args, ctx) {
+    resolve ->(obj, _args, _ctx) {
       obj.owner
     }
   end
@@ -20,14 +22,14 @@ RestaurantType = GraphQL::ObjectType.define do
   field :recipes do
     type types[RecipeType]
 
-    resolve -> (obj, args, ctx) {
+    resolve ->(obj, _args, _ctx) {
       obj.owner.recipes
     }
   end
 end
 
 ChefType = GraphQL::ObjectType.define do
-  name "chef"
+  name 'chef'
 
   field :id, types.ID
   field :name, types.String
@@ -36,14 +38,14 @@ ChefType = GraphQL::ObjectType.define do
   field :recipes do
     type types[RecipeType]
 
-    resolve -> (obj, args, ctx) {
+    resolve ->(obj, _args, _ctx) {
       obj.recipes
     }
   end
 end
 
 RecipeType = GraphQL::ObjectType.define do
-  name "recipe"
+  name 'recipe'
 
   field :id, types.ID
   field :title, types.String
@@ -51,14 +53,14 @@ RecipeType = GraphQL::ObjectType.define do
   field :ingredients do
     type types[IngredientType]
 
-    resolve -> (obj, args, ctx) {
+    resolve ->(obj, _args, _ctx) {
       obj.ingredients
     }
   end
 end
 
 VendorType = GraphQL::ObjectType.define do
-  name "vendor"
+  name 'vendor'
 
   field :id, types.ID
   field :name, types.String
@@ -66,14 +68,14 @@ VendorType = GraphQL::ObjectType.define do
   field :ingredients do
     type types[IngredientType]
 
-    resolve -> (obj, args, ctx) {
+    resolve ->(obj, _args, _ctx) {
       obj.ingredients
     }
   end
 end
 
 IngredientType = GraphQL::ObjectType.define do
-  name "ingredient"
+  name 'ingredient'
 
   field :id, types.ID
   field :name, types.String
@@ -82,14 +84,14 @@ IngredientType = GraphQL::ObjectType.define do
 end
 
 QueryRoot = GraphQL::ObjectType.define do
-  name "query"
-  description "The top level query"
+  name 'query'
+  description 'The top level query'
 
   field :recipes do
     type types[RecipeType]
 
-    resolve -> (obj, args, ctx) {
-      GraphQL::QueryResolver::run(Recipe, ctx, RecipeType) do
+    resolve ->(_obj, _args, ctx) {
+      GraphQL::QueryResolver.run(Recipe, ctx) do
         Recipe.all
       end
     }
@@ -99,18 +101,18 @@ QueryRoot = GraphQL::ObjectType.define do
     type RestaurantType
     argument :id, !types.Int
 
-    resolve -> (obj, args, ctx) {
+    resolve ->(_obj, args, ctx) {
       id = args['id']
 
-      GraphQL::QueryResolver::run(Restaurant, ctx, RestaurantType) do
+      GraphQL::QueryResolver.run(Restaurant, ctx) do
         Restaurant.find(id)
       end
     }
   end
 
   connection :vendors, VendorType.connection_type, max_page_size: 50 do
-    resolve -> (obj, args, ctx) {
-      GraphQL::QueryResolver::run(Vendor, ctx, VendorType) do
+    resolve ->(_obj, _args, ctx) {
+      GraphQL::QueryResolver.run(Vendor, ctx) do
         Vendor.all.to_a
       end
     }
@@ -122,19 +124,14 @@ Schema = GraphQL::Schema.define do
 end
 
 class GQL
-
   class QueryError < StandardError; end
 
   def self.query(query_string)
     document = GraphQL.parse(query_string)
 
-    result = Schema.execute({
-      document: document
-    })
+    result = Schema.execute(document: document)
 
-    if result['errors'].present?
-      raise QueryError.new(result['errors'])
-    end
+    raise(QueryError, result['errors']) if result['errors'].present?
 
     result['data']
   end

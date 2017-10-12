@@ -1,10 +1,12 @@
-require "graphql"
-require "graphql/query_resolver/version"
+# frozen_string_literal: true
+
+require 'graphql'
+require 'graphql/query_resolver/version'
 
 module GraphQL
+  # GraphQL::QueryResolver - preloads associations on the model_class based on the AST tree for the query.
   module QueryResolver
-
-    def self.run(model_class, context, return_type)
+    def self.run(model_class, context)
       to_load = yield
       dependencies = {}
 
@@ -40,11 +42,11 @@ module GraphQL
       end
     end
 
-    def self.has_reflection_with_name?(class_name, selection_name)
+    def self.reflection_with_name?(class_name, selection_name)
       class_name.reflections.with_indifferent_access[selection_name].present?
     end
 
-    def self.map_dependencies(class_name, ast_node, dependencies={})
+    def self.map_dependencies(class_name, ast_node, dependencies = {})
       ast_node.selections.each do |selection|
         name = selection.name
 
@@ -58,16 +60,15 @@ module GraphQL
           next
         end
 
-        if has_reflection_with_name?(class_name, name)
-          begin
-            current_class_name = selection.name.singularize.classify.constantize
-            dependencies[name] = map_dependencies(current_class_name, selection)
-          rescue NameError
-            selection_name = class_name.reflections.with_indifferent_access[selection.name].options[:class_name]
-            current_class_name = selection_name.singularize.classify.constantize
-            dependencies[selection.name.to_sym] = map_dependencies(current_class_name, selection)
-            next
-          end
+        next unless reflection_with_name?(class_name, name)
+        begin
+          current_class_name = name.singularize.classify.constantize
+          dependencies[name.to_sym] = map_dependencies(current_class_name, selection)
+        rescue NameError
+          selection_name = class_name.reflections.with_indifferent_access[name].options[:class_name]
+          current_class_name = selection_name.singularize.classify.constantize
+          dependencies[name.to_sym] = map_dependencies(current_class_name, selection)
+          next
         end
       end
 

@@ -1,12 +1,12 @@
-module TestData
+# frozen_string_literal: true
 
+module TestData
   def self.nv(name)
     Vendor.new(name: name)
   end
 
   def self.create_netto
     Chef.create(name: 'Netto', email: 'nettofarah@gmail.com').tap do |netto|
-
       Recipe.create(title: 'Turkey Sandwich', chef: netto).tap do |r|
         r.ingredients.create(name: 'Turkey', quantity: 'a lot', vendor: nv('Turkey Farm'))
         r.ingredients.create(name: 'Cheese', quantity: '1 slice', vendor: nv('Dairy Farm'))

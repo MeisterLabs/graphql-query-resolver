@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 $LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
 require 'graphql/query_resolver'
 require 'active_record'
@@ -21,7 +23,7 @@ end
 
 def track_queries
   selects = []
-  queries_collector = lambda do |name, start, finish, id, payload|
+  queries_collector = lambda do |_name, _start, _finish, _id, payload|
     selects << payload
   end
 
@@ -30,5 +32,5 @@ def track_queries
     yield
   end
 
-  selects.map { |sel| sel[:sql].strip.gsub("  ", " ") }
+  selects.map { |sel| sel[:sql].strip.gsub('  ', ' ') }
 end
